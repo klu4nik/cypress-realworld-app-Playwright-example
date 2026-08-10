@@ -140,20 +140,44 @@ yarn cypress:open
 >
 > Avoid committing the modified `cypress.config.ts` into Git since the CI environments still expect the application to be run on default ports.
 
+### Start Playwright
+
+A parallel [Playwright](https://playwright.dev) port of the Cypress UI suite lives in [playwright/](./playwright) — see [playwright/README.md](./playwright/README.md) for coverage status, structure, and porting notes.
+
+```shell
+yarn test:playwright        # run the full suite headlessly
+yarn test:playwright:ui     # run in Playwright's UI mode
+```
+
+`playwright.config.ts` boots the app for you via `yarn dev` if it isn't already running. Two projects are configured: `chromium-desktop` and `mobile-safari` (the latter exercises the mobile sidenav-toggle behavior):
+
+```shell
+npx playwright test --project=chromium-desktop
+npx playwright test --project=mobile-safari
+npx playwright show-report  # view the HTML report after a run
+```
+
+> 🚩 **Note**
+>
+> Unlike Cypress, this suite doesn't reseed `data/database.json` between individual tests — each test creates its own user through the live app instead (see [playwright/README.md](./playwright/README.md#why-real-users-instead-of-seeded-fixtures) for why). It's reseeded once the whole run finishes instead, via the same `db:seed` endpoint Cypress uses (see [playwright/global-teardown.ts](./playwright/global-teardown.ts)), so repeated runs don't grow the database without bound. Don't run more than one `playwright test` invocation at a time against the same dev server; concurrent runs share the same backend and database and can produce spurious failures.
+
 ## Tests
 
-| Type      | Location                                 |
-| --------- | ---------------------------------------- |
-| api       | [cypress/tests/api](./cypress/tests/api) |
-| ui        | [cypress/tests/ui](./cypress/tests/ui)   |
-| component | [src/(next to component)](./src)         |
-| unit      | [`src/__tests__`](./src/__tests__)       |
+| Type             | Location                                 |
+| ---------------- | ----------------------------------------- |
+| api              | [cypress/tests/api](./cypress/tests/api) |
+| ui               | [cypress/tests/ui](./cypress/tests/ui)   |
+| ui (playwright)  | [playwright/tests](./playwright/tests)   |
+| component        | [src/(next to component)](./src)         |
+| unit              | [`src/__tests__`](./src/__tests__)       |
 
 ## Database
 
 - The local JSON database is located in [data/database.json](./data/database.json) and is managed with [lowdb].
 
 - The database is [reseeded](./data/database-seed.json) each time the application is started (via `yarn dev`). Database seeding is done in between each [Cypress End-to-End test](./cypress/tests).
+
+- The [Playwright suite](./playwright) reseeds differently: each test creates its own real user through the live app instead of reseeding in between (see [playwright/README.md](./playwright/README.md#why-real-users-instead-of-seeded-fixtures)), and the database is reseeded only once, after the entire suite finishes, via [playwright/global-teardown.ts](./playwright/global-teardown.ts).
 
 - Updates via the React frontend are sent to the [Express][express] server and handled by a set of [database utilities](backend/database.ts)
 
