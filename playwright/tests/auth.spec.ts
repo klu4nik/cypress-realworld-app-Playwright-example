@@ -1,28 +1,17 @@
 import { test, expect, createTestUser, dismissOnboardingIfPresent } from "../fixtures";
-import {
-  SignInPage,
-  SignUpPage,
-  OnboardingDialog,
-  NavigationMenu,
-  HomePage,
-} from "../pages";
+import { SignInPage, SignUpPage, OnboardingDialog, NavigationMenu, HomePage } from "../pages";
 
 test.describe("User Sign-up and Login", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
   });
 
-  test("should redirect unauthenticated user to signin page", async ({
-    page,
-  }) => {
+  test("should redirect unauthenticated user to signin page", async ({ page }) => {
     await page.goto("/personal");
     await expect(page).toHaveURL(/\/signin$/);
   });
 
-  test("should redirect to the home page after login", async ({
-    page,
-    request,
-  }) => {
+  test("should redirect to the home page after login", async ({ page, request }) => {
     const signIn = new SignInPage(page);
     const user = await createTestUser(request);
 
@@ -30,16 +19,10 @@ test.describe("User Sign-up and Login", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("should remember a user for 30 days after login", async ({
-    page,
-    context,
-    request,
-  }) => {
-    const signIn = new SignInPage(page);
-    const nav = new NavigationMenu(page);
+  test("should remember a user for 30 days after login", async ({ page, context, request, signInPage, navigationMenu  }) => {
     const user = await createTestUser(request);
 
-    await signIn.login(user.username, user.password, { rememberUser: true });
+    await signInPage.login(user.username, user.password, { rememberUser: true });
     await dismissOnboardingIfPresent(page);
 
     const cookies = await context.cookies();
@@ -47,13 +30,11 @@ test.describe("User Sign-up and Login", () => {
     expect(sessionCookie).toBeTruthy();
     expect(sessionCookie!.expires).toBeGreaterThan(-1);
 
-    await nav.signOut();
+    await navigationMenu.signOut();
     await expect(page).toHaveURL(/\/signin$/);
   });
 
-  test("should allow a visitor to sign-up, login, and logout", async ({
-    page,
-  }) => {
+  test("should allow a visitor to sign-up, login, and logout", async ({ page }) => {
     const signUp = new SignUpPage(page);
     const signIn = new SignInPage(page);
     const onboarding = new OnboardingDialog(page);
@@ -106,66 +87,59 @@ test.describe("User Sign-up and Login", () => {
     await expect(page).toHaveURL(/\/signin$/);
   });
 
-  test("should display login errors", async ({ page }) => {
-    const signIn = new SignInPage(page);
-    await signIn.goto();
+  test("should display login errors", async ({ page, signInPage }) => {
+    await signInPage.goto();
 
-    await signIn.usernameInput.fill("User");
-    await signIn.usernameInput.clear();
-    await signIn.usernameInput.blur();
-    await signIn.expectUsernameRequiredError();
+    await signInPage.usernameInput.fill("User");
+    await signInPage.usernameInput.clear();
+    await signInPage.usernameInput.blur();
+    await signInPage.expectUsernameRequiredError();
 
-    await signIn.passwordInput.fill("abc");
-    await signIn.passwordInput.blur();
-    await signIn.expectPasswordLengthError();
+    await signInPage.passwordInput.fill("abc");
+    await signInPage.passwordInput.blur();
+    await signInPage.expectPasswordLengthError();
 
-    await signIn.expectSubmitDisabled();
+    await signInPage.expectSubmitDisabled();
   });
 
-  test("should display signup errors", async ({ page }) => {
-    const signUp = new SignUpPage(page);
-    await signUp.goto();
+  test("should display signup errors", async ({ page, signUpPage }) => {
+    await signUpPage.goto();
 
-    await signUp.firstNameInput.fill("First");
-    await signUp.firstNameInput.clear();
-    await signUp.firstNameInput.blur();
-    await signUp.expectFirstNameRequiredError();
+    await signUpPage.firstNameInput.fill("First");
+    await signUpPage.firstNameInput.clear();
+    await signUpPage.firstNameInput.blur();
+    await signUpPage.expectFirstNameRequiredError();
 
-    await signUp.lastNameInput.fill("Last");
-    await signUp.lastNameInput.clear();
-    await signUp.lastNameInput.blur();
-    await signUp.expectLastNameRequiredError();
+    await signUpPage.lastNameInput.fill("Last");
+    await signUpPage.lastNameInput.clear();
+    await signUpPage.lastNameInput.blur();
+    await signUpPage.expectLastNameRequiredError();
 
-    await signUp.usernameInput.fill("User");
-    await signUp.usernameInput.clear();
-    await signUp.usernameInput.blur();
-    await signUp.expectUsernameRequiredError();
+    await signUpPage.usernameInput.fill("User");
+    await signUpPage.usernameInput.clear();
+    await signUpPage.usernameInput.blur();
+    await signUpPage.expectUsernameRequiredError();
 
-    await signUp.passwordInput.fill("password");
-    await signUp.passwordInput.clear();
-    await signUp.passwordInput.blur();
-    await signUp.expectPasswordRequiredError();
+    await signUpPage.passwordInput.fill("password");
+    await signUpPage.passwordInput.clear();
+    await signUpPage.passwordInput.blur();
+    await signUpPage.expectPasswordRequiredError();
 
-    await signUp.confirmPasswordInput.fill("DIFFERENT PASSWORD");
-    await signUp.confirmPasswordInput.blur();
-    await signUp.expectConfirmPasswordMismatchError();
+    await signUpPage.confirmPasswordInput.fill("DIFFERENT PASSWORD");
+    await signUpPage.confirmPasswordInput.blur();
+    await signUpPage.expectConfirmPasswordMismatchError();
 
-    await signUp.expectSubmitDisabled();
+    await signUpPage.expectSubmitDisabled();
   });
 
-  test("should error for an invalid user", async ({ page }) => {
-    const signIn = new SignInPage(page);
-    await signIn.login("invalidUserName", "invalidPa$$word");
-    await signIn.expectInvalidCredentialsError();
+  test("should error for an invalid user", async ({ page, signInPage }) => {
+    await signInPage.login("invalidUserName", "invalidPa$$word");
+    await signInPage.expectInvalidCredentialsError();
   });
 
-  test("should error for an invalid password for existing user", async ({
-    page,
-    request,
-  }) => {
-    const signIn = new SignInPage(page);
+  test("should error for an invalid password for existing user", async ({ page, request, signInPage }) => {
     const user = await createTestUser(request);
-    await signIn.login(user.username, "INVALID");
-    await signIn.expectInvalidCredentialsError();
+    await signInPage.login(user.username, "INVALID");
+    await signInPage.expectInvalidCredentialsError();
   });
 });
