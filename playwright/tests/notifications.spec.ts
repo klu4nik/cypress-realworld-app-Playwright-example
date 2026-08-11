@@ -100,10 +100,7 @@ test.describe("Notifications", () => {
     await expect(firstItem).toContainText("commented");
   });
 
-  test("receiver is notified of a payment", async ({
-    navigationMenu,
-    newTransactionPage,
-  }) => {
+  test("receiver is notified of a payment", async ({ navigationMenu, newTransactionPage }) => {
     await navigationMenu.newTransactionButton.click();
     await newTransactionPage.createTransaction(
       receiverSession.user.firstName,
@@ -114,9 +111,7 @@ test.describe("Notifications", () => {
 
     await receiverNav.goToNotifications();
 
-    await expect(receiverNotifications.listItems.first()).toContainText(
-      "received payment"
-    );
+    await expect(receiverNotifications.listItems.first()).toContainText("received payment");
   });
 
   test("receiver is notified of a payment request", async ({
@@ -133,9 +128,7 @@ test.describe("Notifications", () => {
 
     await receiverNav.goToNotifications();
 
-    await expect(receiverNotifications.listItems.first()).toContainText(
-      "requested payment"
-    );
+    await expect(receiverNotifications.listItems.first()).toContainText("requested payment");
   });
 
   test("renders an empty notifications state for a brand-new user", async () => {

@@ -21,12 +21,8 @@ export interface TestUser {
  * reseeded once the whole suite finishes — see global-teardown.ts — but
  * never mid-run, so tests can't rely on starting from a clean slate.
  */
-export async function createTestUser(
-  request: APIRequestContext
-): Promise<TestUser> {
-  const unique = `${Date.now().toString(36)}${Math.random()
-    .toString(36)
-    .slice(2, 6)}`;
+export async function createTestUser(request: APIRequestContext): Promise<TestUser> {
+  const unique = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
   const user: TestUser = {
     // Unique per user, not just "Playwright": many tests run within the

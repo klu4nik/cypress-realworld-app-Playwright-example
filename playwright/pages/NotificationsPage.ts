@@ -21,9 +21,7 @@ export class NotificationsPage {
 
   async markFirstRead(): Promise<void> {
     const response = this.page.waitForResponse(
-      (res) =>
-        res.url().includes("/notifications/") &&
-        res.request().method() === "PATCH"
+      (res) => res.url().includes("/notifications/") && res.request().method() === "PATCH"
     );
     await this.markReadButtons.first().click({ force: true });
     await response;

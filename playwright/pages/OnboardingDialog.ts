@@ -29,15 +29,9 @@ export class OnboardingDialog {
     // These fields use dynamic/prefixed data-test values in the RWA
     // markup (equivalent of cy.getBySelLike), so we match by substring
     // instead of an exact testId.
-    this.bankNameInput = page
-      .locator('[data-test*="bankName-input"]')
-      .locator("input");
-    this.accountNumberInput = page
-      .locator('[data-test*="accountNumber-input"]')
-      .locator("input");
-    this.routingNumberInput = page
-      .locator('[data-test*="routingNumber-input"]')
-      .locator("input");
+    this.bankNameInput = page.locator('[data-test*="bankName-input"]').locator("input");
+    this.accountNumberInput = page.locator('[data-test*="accountNumber-input"]').locator("input");
+    this.routingNumberInput = page.locator('[data-test*="routingNumber-input"]').locator("input");
     this.bankAccountSubmitButton = page.locator('[data-test*="submit"]');
   }
 

@@ -64,9 +64,7 @@ const combineFixtures = (...args: Fixtures[]): Fixtures =>
 // disjoint.) Session fixtures stay inline so TypeScript can still infer
 // `browser` and `createUserSession` in their implementations.
 export const test = base
-  .extend<PageContextFixture & PageFixture>(
-    combineFixtures(pageContextFixture, pageFixture)
-  )
+  .extend<PageContextFixture & PageFixture>(combineFixtures(pageContextFixture, pageFixture))
   .extend<SessionFixtures>({
     createUserSession: async ({ browser }, use) => {
       const sessions: UserSession[] = [];

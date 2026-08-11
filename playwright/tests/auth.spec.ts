@@ -10,11 +10,7 @@ test.describe("User Sign-up and Login", () => {
     await expect(page).toHaveURL(/\/signin$/);
   });
 
-  test("should redirect to the home page after login", async ({
-    page,
-    request,
-    signInPage,
-  }) => {
+  test("should redirect to the home page after login", async ({ page, request, signInPage }) => {
     const user = await createTestUser(request);
 
     await signInPage.login(user.username, user.password, { rememberUser: true });

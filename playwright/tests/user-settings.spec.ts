@@ -28,9 +28,7 @@ test.describe("User Settings", () => {
   test("should display user setting form errors", async ({ userSettingsPage }) => {
     for (const field of ["first", "last"] as const) {
       const input =
-        field === "first"
-          ? userSettingsPage.firstNameInput
-          : userSettingsPage.lastNameInput;
+        field === "first" ? userSettingsPage.firstNameInput : userSettingsPage.lastNameInput;
       const helperText =
         field === "first"
           ? userSettingsPage.firstNameHelperText
@@ -47,9 +45,7 @@ test.describe("User Settings", () => {
     await userSettingsPage.emailInput.clear();
     await userSettingsPage.emailInput.blur();
     await expect(userSettingsPage.emailHelperText).toBeVisible();
-    await expect(userSettingsPage.emailHelperText).toContainText(
-      "Enter an email address"
-    );
+    await expect(userSettingsPage.emailHelperText).toContainText("Enter an email address");
 
     await userSettingsPage.emailInput.fill("abc@bob.");
     await userSettingsPage.emailInput.blur();
@@ -62,16 +58,12 @@ test.describe("User Settings", () => {
     await userSettingsPage.phoneNumberInput.clear();
     await userSettingsPage.phoneNumberInput.blur();
     await expect(userSettingsPage.phoneNumberHelperText).toBeVisible();
-    await expect(userSettingsPage.phoneNumberHelperText).toContainText(
-      "Enter a phone number"
-    );
+    await expect(userSettingsPage.phoneNumberHelperText).toContainText("Enter a phone number");
 
     await userSettingsPage.phoneNumberInput.fill("615-555-");
     await userSettingsPage.phoneNumberInput.blur();
     await expect(userSettingsPage.phoneNumberHelperText).toBeVisible();
-    await expect(userSettingsPage.phoneNumberHelperText).toContainText(
-      "Phone number is not valid"
-    );
+    await expect(userSettingsPage.phoneNumberHelperText).toContainText("Phone number is not valid");
 
     await expect(userSettingsPage.submitButton).toBeDisabled();
   });

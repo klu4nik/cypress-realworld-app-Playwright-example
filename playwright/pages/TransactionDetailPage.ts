@@ -44,9 +44,7 @@ export class TransactionDetailPage {
 
   async acceptRequest(): Promise<void> {
     const response = this.page.waitForResponse(
-      (res) =>
-        res.url().includes("/transactions/") &&
-        res.request().method() === "PATCH"
+      (res) => res.url().includes("/transactions/") && res.request().method() === "PATCH"
     );
     await this.acceptRequestButton.click();
     await response;

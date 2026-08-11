@@ -29,17 +29,13 @@ export class SignUpPage {
     this.lastNameInput = page.getByTestId("signup-last-name").locator("input");
     this.usernameInput = page.getByTestId("signup-username").locator("input");
     this.passwordInput = page.getByTestId("signup-password").locator("input");
-    this.confirmPasswordInput = page
-      .getByTestId("signup-confirmPassword")
-      .locator("input");
+    this.confirmPasswordInput = page.getByTestId("signup-confirmPassword").locator("input");
     this.submitButton = page.getByTestId("signup-submit");
     this.firstNameHelperText = page.locator("#firstName-helper-text");
     this.lastNameHelperText = page.locator("#lastName-helper-text");
     this.usernameHelperText = page.locator("#username-helper-text");
     this.passwordHelperText = page.locator("#password-helper-text");
-    this.confirmPasswordHelperText = page.locator(
-      "#confirmPassword-helper-text"
-    );
+    this.confirmPasswordHelperText = page.locator("#confirmPassword-helper-text");
   }
 
   async goto(): Promise<void> {
@@ -56,8 +52,7 @@ export class SignUpPage {
 
   async submit(): Promise<void> {
     const signupResponse = this.page.waitForResponse(
-      (res) =>
-        res.url().includes("/users") && res.request().method() === "POST"
+      (res) => res.url().includes("/users") && res.request().method() === "POST"
     );
     await this.submitButton.click();
     await signupResponse;
@@ -65,23 +60,17 @@ export class SignUpPage {
 
   async expectFirstNameRequiredError(): Promise<void> {
     await expect(this.firstNameHelperText).toBeVisible();
-    await expect(this.firstNameHelperText).toContainText(
-      "First Name is required"
-    );
+    await expect(this.firstNameHelperText).toContainText("First Name is required");
   }
 
   async expectLastNameRequiredError(): Promise<void> {
     await expect(this.lastNameHelperText).toBeVisible();
-    await expect(this.lastNameHelperText).toContainText(
-      "Last Name is required"
-    );
+    await expect(this.lastNameHelperText).toContainText("Last Name is required");
   }
 
   async expectUsernameRequiredError(): Promise<void> {
     await expect(this.usernameHelperText).toBeVisible();
-    await expect(this.usernameHelperText).toContainText(
-      "Username is required"
-    );
+    await expect(this.usernameHelperText).toContainText("Username is required");
   }
 
   async expectPasswordRequiredError(): Promise<void> {
@@ -91,9 +80,7 @@ export class SignUpPage {
 
   async expectConfirmPasswordMismatchError(): Promise<void> {
     await expect(this.confirmPasswordHelperText).toBeVisible();
-    await expect(this.confirmPasswordHelperText).toContainText(
-      "Password does not match"
-    );
+    await expect(this.confirmPasswordHelperText).toContainText("Password does not match");
   }
 
   async expectSubmitDisabled(): Promise<void> {

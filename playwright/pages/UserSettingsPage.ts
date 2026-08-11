@@ -25,16 +25,10 @@ export class UserSettingsPage {
     this.emailInput = page.locator('[data-test*="email-input"]');
     this.phoneNumberInput = page.locator('[data-test*="phoneNumber-input"]');
     this.submitButton = page.locator('[data-test*="submit"]');
-    this.firstNameHelperText = page.locator(
-      "#user-settings-firstName-input-helper-text"
-    );
-    this.lastNameHelperText = page.locator(
-      "#user-settings-lastName-input-helper-text"
-    );
+    this.firstNameHelperText = page.locator("#user-settings-firstName-input-helper-text");
+    this.lastNameHelperText = page.locator("#user-settings-lastName-input-helper-text");
     this.emailHelperText = page.locator("#user-settings-email-input-helper-text");
-    this.phoneNumberHelperText = page.locator(
-      "#user-settings-phoneNumber-input-helper-text"
-    );
+    this.phoneNumberHelperText = page.locator("#user-settings-phoneNumber-input-helper-text");
   }
 
   async submit(): Promise<void> {

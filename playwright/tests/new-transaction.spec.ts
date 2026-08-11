@@ -50,9 +50,7 @@ test.describe("New Transaction", () => {
     await personalTab.click();
     await expect(personalTab).toHaveClass(/Mui-selected/);
 
-    await expect(page.getByTestId("transaction-list").first()).toContainText(
-      "Sushi dinner"
-    );
+    await expect(page.getByTestId("transaction-list").first()).toContainText("Sushi dinner");
   });
 
   test("navigates to the new transaction form, selects a user and submits a transaction request", async ({
@@ -75,9 +73,7 @@ test.describe("New Transaction", () => {
     const personalTab = page.locator('[data-test*="personal-tab"]');
     await personalTab.click();
     await expect(personalTab).toHaveClass(/Mui-selected/);
-    await expect(page.locator('[data-test*="transaction-item"]')).toContainText(
-      "Fancy Hotel"
-    );
+    await expect(page.locator('[data-test*="transaction-item"]')).toContainText("Fancy Hotel");
   });
 
   test("displays new transaction errors", async ({
@@ -94,17 +90,13 @@ test.describe("New Transaction", () => {
     await newTransactionPage.amountInput.clear();
     await newTransactionPage.amountInput.blur();
     await expect(newTransactionPage.amountHelperText).toBeVisible();
-    await expect(newTransactionPage.amountHelperText).toContainText(
-      "Please enter a valid amount"
-    );
+    await expect(newTransactionPage.amountHelperText).toContainText("Please enter a valid amount");
 
     await newTransactionPage.descriptionInput.fill("Fun");
     await newTransactionPage.descriptionInput.clear();
     await newTransactionPage.descriptionInput.blur();
     await expect(newTransactionPage.descriptionHelperText).toBeVisible();
-    await expect(newTransactionPage.descriptionHelperText).toContainText(
-      "Please enter a note"
-    );
+    await expect(newTransactionPage.descriptionHelperText).toContainText("Please enter a note");
 
     await expect(newTransactionPage.submitRequestButton).toBeDisabled();
     await expect(newTransactionPage.submitPaymentButton).toBeDisabled();
@@ -125,9 +117,7 @@ test.describe("New Transaction", () => {
       "Indian Food",
       "payment"
     );
-    await expect(
-      page.getByTestId("new-transaction-create-another-transaction")
-    ).toBeVisible();
+    await expect(page.getByTestId("new-transaction-create-another-transaction")).toBeVisible();
 
     // Receiver checks their own balance changed, in their own context.
     const receiverNav = receiverSession.pages.navigationMenu;
@@ -151,17 +141,13 @@ test.describe("New Transaction", () => {
       "Fancy Hotel",
       "request"
     );
-    await expect(
-      page.getByTestId("new-transaction-create-another-transaction")
-    ).toBeVisible();
+    await expect(page.getByTestId("new-transaction-create-another-transaction")).toBeVisible();
 
     // Receiver navigates to their personal feed, opens the request, and accepts it.
     const receiverPage = receiverSession.page;
     const receiverPersonalTab = receiverPage.locator('[data-test*="personal-tab"]');
     await receiverPersonalTab.click();
-    const firstItem = receiverPage
-      .locator('[data-test*="transaction-item"]')
-      .first();
+    const firstItem = receiverPage.locator('[data-test*="transaction-item"]').first();
     await expect(firstItem).toContainText("Fancy Hotel");
     await firstItem.click();
 
@@ -185,11 +171,7 @@ test.describe("New Transaction", () => {
     const searchAttrs: Array<"firstName" | "username"> = ["firstName", "username"];
 
     for (const attr of searchAttrs) {
-      test(`by ${attr}`, async ({
-        navigationMenu,
-        newTransactionPage,
-        createUserSession,
-      }) => {
+      test(`by ${attr}`, async ({ navigationMenu, newTransactionPage, createUserSession }) => {
         const targetSession = await createUserSession();
 
         await navigationMenu.newTransactionButton.click();

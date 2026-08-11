@@ -21,23 +21,13 @@ export class NewTransactionPage {
     this.userListItems = page.locator('[data-test*="user-list-item"]');
     this.usersList = page.getByTestId("users-list");
     this.amountInput = page.locator('[data-test*="amount-input"]').locator("input");
-    this.descriptionInput = page
-      .locator('[data-test*="description-input"]')
-      .locator("input");
-    this.amountHelperText = page.locator(
-      "#transaction-create-amount-input-helper-text"
-    );
-    this.descriptionHelperText = page.locator(
-      "#transaction-create-description-input-helper-text"
-    );
+    this.descriptionInput = page.locator('[data-test*="description-input"]').locator("input");
+    this.amountHelperText = page.locator("#transaction-create-amount-input-helper-text");
+    this.descriptionHelperText = page.locator("#transaction-create-description-input-helper-text");
     this.submitPaymentButton = page.locator('[data-test*="submit-payment"]');
     this.submitRequestButton = page.locator('[data-test*="submit-request"]');
-    this.createAnotherButton = page.locator(
-      '[data-test*="create-another-transaction"]'
-    );
-    this.returnToTransactionsButton = page.locator(
-      '[data-test*="return-to-transactions"]'
-    );
+    this.createAnotherButton = page.locator('[data-test*="create-another-transaction"]');
+    this.returnToTransactionsButton = page.locator('[data-test*="return-to-transactions"]');
     this.successAlert = page.getByTestId("alert-bar-success");
   }
 
@@ -50,10 +40,7 @@ export class NewTransactionPage {
     await this.userListItems.filter({ hasText: name }).first().click();
   }
 
-  async fillAmountAndDescription(
-    amount: string,
-    description: string
-  ): Promise<void> {
+  async fillAmountAndDescription(amount: string, description: string): Promise<void> {
     await this.amountInput.fill(amount);
     await this.descriptionInput.fill(description);
   }

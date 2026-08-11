@@ -18,9 +18,7 @@ export class SignInPage {
     // actual editable element.
     this.usernameInput = page.getByTestId("signin-username").locator("input");
     this.passwordInput = page.getByTestId("signin-password").locator("input");
-    this.rememberMeCheckbox = page
-      .getByTestId("signin-remember-me")
-      .locator("input");
+    this.rememberMeCheckbox = page.getByTestId("signin-remember-me").locator("input");
     this.submitButton = page.getByTestId("signin-submit");
     this.errorMessage = page.getByTestId("signin-error");
     this.usernameHelperText = page.locator("#username-helper-text");
@@ -49,8 +47,7 @@ export class SignInPage {
     }
 
     const loginResponse = this.page.waitForResponse(
-      (res) =>
-        res.url().includes("/login") && res.request().method() === "POST"
+      (res) => res.url().includes("/login") && res.request().method() === "POST"
     );
     await this.submitButton.click();
     await loginResponse;
@@ -58,9 +55,7 @@ export class SignInPage {
 
   async expectUsernameRequiredError(): Promise<void> {
     await expect(this.usernameHelperText).toBeVisible();
-    await expect(this.usernameHelperText).toContainText(
-      "Username is required"
-    );
+    await expect(this.usernameHelperText).toContainText("Username is required");
   }
 
   async expectPasswordLengthError(): Promise<void> {
@@ -76,8 +71,6 @@ export class SignInPage {
 
   async expectInvalidCredentialsError(): Promise<void> {
     await expect(this.errorMessage).toBeVisible();
-    await expect(this.errorMessage).toHaveText(
-      "Username or password is invalid"
-    );
+    await expect(this.errorMessage).toHaveText("Username or password is invalid");
   }
 }
