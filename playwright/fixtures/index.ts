@@ -1,5 +1,7 @@
 import { test as base, Fixtures } from "@playwright/test";
 import { createUserSession, UserSession } from "./user-session";
+import { createTestUser, TestUser } from "./test-user";
+import { dismissOnboardingIfPresent } from "./onboarding";
 import { pageContextFixture, pageFixture, PageContextFixture, PageFixture } from "./page";
 
 export type { UserSession } from "./user-session";
@@ -19,6 +21,16 @@ interface SessionFixtures {
    *  test that only needs one user. Built on `createUserSession`, so it
    *  gets the same automatic cleanup. */
   userSession: UserSession;
+  /** A fresh user signed up and logged in on the **default** `page`.
+   *
+   *  Use this — not `userSession` — when a spec's main user should be
+   *  driven through the page-object fixtures (`navigationMenu`,
+   *  `userSettingsPage`, …). Those all bind to `contextPage`, which is the
+   *  default `page`, so they only reach a user logged in there.
+   *  `userSession` deliberately opens its *own* context, which the page
+   *  fixtures cannot see; it stays the right choice for the second user in
+   *  a multi-user test. */
+  loggedInUser: TestUser;
 }
 
 /**
@@ -68,6 +80,15 @@ export const test = base
 
     userSession: async ({ createUserSession }, use) => {
       await use(await createUserSession());
+    },
+
+    loggedInUser: async ({ page, request, signInPage }, use) => {
+      const user = await createTestUser(request);
+      await signInPage.login(user.username, user.password);
+      // A brand-new user has no bank account, so RWA blocks the UI with its
+      // onboarding modal until that's done — see fixtures/onboarding.ts.
+      await dismissOnboardingIfPresent(page);
+      await use(user);
     },
   });
 

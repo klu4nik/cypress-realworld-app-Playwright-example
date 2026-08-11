@@ -1,5 +1,4 @@
-import { test, expect, UserSession } from "../fixtures";
-import { UserSettingsPage, NavigationMenu } from "../pages";
+import { test, expect } from "../fixtures";
 
 /**
  * Playwright port of cypress/tests/ui/user-settings.spec.ts.
@@ -8,36 +7,34 @@ import { UserSettingsPage, NavigationMenu } from "../pages";
  * (an arbitrary pre-seeded user) via `cy.loginByXstate`. Per the auth
  * suite's notes, reaching into a separately-seeded db file doesn't
  * reliably reflect what the live server has loaded, so each test here
- * creates and logs in its own fresh user through the real app instead
- * (see fixtures/user-session.ts). The `userSession` fixture handles both
- * creating that user and closing its browser context afterward.
+ * creates and logs in its own fresh user through the real app instead.
+ *
+ * This spec only needs one user, so it uses the `loggedInUser` fixture —
+ * which logs in on the default `page` — and drives everything through the
+ * page-object fixtures.
  */
 test.describe("User Settings", () => {
-  let session: UserSession;
-  let settings: UserSettingsPage;
-  let nav: NavigationMenu;
-
-  test.beforeEach(async ({ userSession }) => {
-    session = userSession;
-    settings = new UserSettingsPage(session.page);
-    nav = new NavigationMenu(session.page);
-
-    await nav.goToUserSettings();
+  // `loggedInUser` is unreferenced on purpose — requesting the fixture is
+  // what signs the user in, and the page objects need that to have happened.
+  test.beforeEach(async ({ loggedInUser, navigationMenu }) => {
+    await navigationMenu.goToUserSettings();
   });
 
-  test("renders the user settings form", async () => {
-    await expect(settings.form).toBeVisible();
-    await expect(session.page).toHaveURL(/\/user\/settings$/);
+  test("renders the user settings form", async ({ page, userSettingsPage }) => {
+    await expect(userSettingsPage.form).toBeVisible();
+    await expect(page).toHaveURL(/\/user\/settings$/);
   });
 
-  test("should display user setting form errors", async () => {
+  test("should display user setting form errors", async ({ userSettingsPage }) => {
     for (const field of ["first", "last"] as const) {
       const input =
-        field === "first" ? settings.firstNameInput : settings.lastNameInput;
+        field === "first"
+          ? userSettingsPage.firstNameInput
+          : userSettingsPage.lastNameInput;
       const helperText =
         field === "first"
-          ? settings.firstNameHelperText
-          : settings.lastNameHelperText;
+          ? userSettingsPage.firstNameHelperText
+          : userSettingsPage.lastNameHelperText;
 
       await input.fill("Abc");
       await input.clear();
@@ -46,54 +43,57 @@ test.describe("User Settings", () => {
       await expect(helperText).toContainText(`Enter a ${field} name`);
     }
 
-    await settings.emailInput.fill("abc");
-    await settings.emailInput.clear();
-    await settings.emailInput.blur();
-    await expect(settings.emailHelperText).toBeVisible();
-    await expect(settings.emailHelperText).toContainText(
+    await userSettingsPage.emailInput.fill("abc");
+    await userSettingsPage.emailInput.clear();
+    await userSettingsPage.emailInput.blur();
+    await expect(userSettingsPage.emailHelperText).toBeVisible();
+    await expect(userSettingsPage.emailHelperText).toContainText(
       "Enter an email address"
     );
 
-    await settings.emailInput.fill("abc@bob.");
-    await settings.emailInput.blur();
-    await expect(settings.emailHelperText).toBeVisible();
-    await expect(settings.emailHelperText).toContainText(
+    await userSettingsPage.emailInput.fill("abc@bob.");
+    await userSettingsPage.emailInput.blur();
+    await expect(userSettingsPage.emailHelperText).toBeVisible();
+    await expect(userSettingsPage.emailHelperText).toContainText(
       "Must contain a valid email address"
     );
 
-    await settings.phoneNumberInput.fill("abc");
-    await settings.phoneNumberInput.clear();
-    await settings.phoneNumberInput.blur();
-    await expect(settings.phoneNumberHelperText).toBeVisible();
-    await expect(settings.phoneNumberHelperText).toContainText(
+    await userSettingsPage.phoneNumberInput.fill("abc");
+    await userSettingsPage.phoneNumberInput.clear();
+    await userSettingsPage.phoneNumberInput.blur();
+    await expect(userSettingsPage.phoneNumberHelperText).toBeVisible();
+    await expect(userSettingsPage.phoneNumberHelperText).toContainText(
       "Enter a phone number"
     );
 
-    await settings.phoneNumberInput.fill("615-555-");
-    await settings.phoneNumberInput.blur();
-    await expect(settings.phoneNumberHelperText).toBeVisible();
-    await expect(settings.phoneNumberHelperText).toContainText(
+    await userSettingsPage.phoneNumberInput.fill("615-555-");
+    await userSettingsPage.phoneNumberInput.blur();
+    await expect(userSettingsPage.phoneNumberHelperText).toBeVisible();
+    await expect(userSettingsPage.phoneNumberHelperText).toContainText(
       "Phone number is not valid"
     );
 
-    await expect(settings.submitButton).toBeDisabled();
+    await expect(userSettingsPage.submitButton).toBeDisabled();
   });
 
-  test("updates first name, last name, email and phone number", async () => {
-    await settings.firstNameInput.clear();
-    await settings.firstNameInput.fill("New First Name");
-    await settings.lastNameInput.clear();
-    await settings.lastNameInput.fill("New Last Name");
-    await settings.emailInput.clear();
-    await settings.emailInput.fill("email@email.com");
-    await settings.phoneNumberInput.clear();
-    await settings.phoneNumberInput.fill("6155551212");
-    await settings.phoneNumberInput.blur();
+  test("updates first name, last name, email and phone number", async ({
+    userSettingsPage,
+    navigationMenu,
+  }) => {
+    await userSettingsPage.firstNameInput.clear();
+    await userSettingsPage.firstNameInput.fill("New First Name");
+    await userSettingsPage.lastNameInput.clear();
+    await userSettingsPage.lastNameInput.fill("New Last Name");
+    await userSettingsPage.emailInput.clear();
+    await userSettingsPage.emailInput.fill("email@email.com");
+    await userSettingsPage.phoneNumberInput.clear();
+    await userSettingsPage.phoneNumberInput.fill("6155551212");
+    await userSettingsPage.phoneNumberInput.blur();
 
-    await expect(settings.submitButton).toBeEnabled();
-    await settings.submit();
+    await expect(userSettingsPage.submitButton).toBeEnabled();
+    await userSettingsPage.submit();
 
-    await nav.openSidenavIfMobile();
-    await expect(nav.userFullName).toContainText("New First Name");
+    await navigationMenu.openSidenavIfMobile();
+    await expect(navigationMenu.userFullName).toContainText("New First Name");
   });
 });

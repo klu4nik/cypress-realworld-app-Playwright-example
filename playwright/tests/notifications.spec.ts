@@ -1,5 +1,5 @@
 import { test, expect, UserSession } from "../fixtures";
-import { NewTransactionPage, NavigationMenu, TransactionDetailPage, NotificationsPage } from "../pages";
+import type { NavigationMenu, NotificationsPage } from "../pages";
 
 /**
  * Playwright port of cypress/tests/ui/notifications.spec.ts.
@@ -16,151 +16,135 @@ import { NewTransactionPage, NavigationMenu, TransactionDetailPage, Notification
  * is a deliberate reduction in case count, not in the underlying
  * behavior covered.
  *
- * Both sessions come from the `createUserSession` fixture (fixtures/index.ts),
- * which tracks and closes every context it creates automatically.
+ * The sender is the `loggedInUser` fixture on the default `page`, so it's
+ * driven through the page-object fixtures. The receiver needs a second
+ * simultaneous login and therefore its own browser context, which the page
+ * fixtures can't reach — its page objects are built directly.
  */
 test.describe("Notifications", () => {
-  let senderSession: UserSession;
   let receiverSession: UserSession;
+  let receiverNav: NavigationMenu;
+  let receiverNotifications: NotificationsPage;
 
-  test.beforeEach(async ({ createUserSession }) => {
-    senderSession = await createUserSession();
+  // `loggedInUser` is unreferenced on purpose — requesting the fixture is
+  // what signs the sender in on the default page.
+  test.beforeEach(async ({ loggedInUser, createUserSession }) => {
     receiverSession = await createUserSession();
+    receiverNav = receiverSession.pages.navigationMenu;
+    receiverNotifications = receiverSession.pages.notificationsPage;
   });
 
-  async function createTransactionAndOpenAsReceiver(
-    type: "payment" | "request",
-    amount: string,
-    description: string
-  ): Promise<string> {
-    const nav = new NavigationMenu(senderSession.page);
-    const newTransaction = new NewTransactionPage(senderSession.page);
-
-    await nav.newTransactionButton.click();
-    await newTransaction.createTransaction(
+  test("receiver gets a notification when the sender likes the transaction", async ({
+    page,
+    loggedInUser,
+    navigationMenu,
+    newTransactionPage,
+    transactionDetailPage,
+  }) => {
+    await navigationMenu.newTransactionButton.click();
+    await newTransactionPage.createTransaction(
       receiverSession.user.firstName,
-      amount,
-      description,
-      type
+      "20",
+      "Coffee",
+      "payment"
     );
 
-    const receiverPage = receiverSession.page;
-    const personalTab = receiverPage.locator('[data-test*="personal-tab"]');
-    await personalTab.click();
-    const item = receiverPage.locator('[data-test*="transaction-item"]').first();
-    await expect(item).toContainText(description);
-    await item.click();
+    // Sender opens the transaction and likes it. They're still sitting on
+    // /transaction/new's success screen — the personal-tab nav only renders
+    // on /, /public, /contacts, or /personal (see NavBar.tsx's
+    // TransactionNavTabs gating), so reloading here would reload
+    // /transaction/new and the tab locator would wait forever.
+    await page.goto("/");
+    await page.locator('[data-test*="personal-tab"]').click();
+    await page.locator('[data-test*="transaction-item"]').first().click();
 
-    return receiverPage.url().split("/transaction/")[1];
-  }
-
-  test("receiver gets a notification when the sender likes the transaction", async () => {
-    await createTransactionAndOpenAsReceiver("payment", "20", "Coffee");
-
-    // Sender opens the same transaction and likes it. The sender is still
-    // sitting on /transaction/new's success screen at this point — the
-    // personal-tab nav only renders on /, /public, /contacts, or /personal
-    // (see NavBar.tsx's TransactionNavTabs gating), so a reload() here would
-    // reload /transaction/new itself and the tab locator would wait forever.
-    const senderPage = senderSession.page;
-    await senderPage.goto("/");
-    const senderPersonalTab = senderPage.locator('[data-test*="personal-tab"]');
-    await senderPersonalTab.click();
-    const senderItem = senderPage
-      .locator('[data-test*="transaction-item"]')
-      .first();
-    await senderItem.click();
-
-    const senderDetail = new TransactionDetailPage(senderPage);
-    await expect(senderDetail.likeCount).toContainText("0");
-    await senderDetail.like();
-    await expect(senderDetail.likeCount).toContainText("1");
+    await expect(transactionDetailPage.likeCount).toContainText("0");
+    await transactionDetailPage.like();
+    await expect(transactionDetailPage.likeCount).toContainText("1");
 
     // Receiver checks their notifications.
-    const notifications = new NotificationsPage(receiverSession.page);
-    const receiverNav = new NavigationMenu(receiverSession.page);
     await receiverNav.goToNotifications();
 
-    const firstItem = notifications.listItems.first();
-    await expect(firstItem).toContainText(senderSession.user.firstName);
+    const firstItem = receiverNotifications.listItems.first();
+    await expect(firstItem).toContainText(loggedInUser.firstName);
     await expect(firstItem).toContainText("liked");
 
-    await notifications.markFirstRead();
+    await receiverNotifications.markFirstRead();
   });
 
-  test("receiver gets a notification when the sender comments on the transaction", async () => {
-    await createTransactionAndOpenAsReceiver("payment", "15", "Lunch");
+  test("receiver gets a notification when the sender comments on the transaction", async ({
+    page,
+    loggedInUser,
+    navigationMenu,
+    newTransactionPage,
+    transactionDetailPage,
+  }) => {
+    await navigationMenu.newTransactionButton.click();
+    await newTransactionPage.createTransaction(
+      receiverSession.user.firstName,
+      "15",
+      "Lunch",
+      "payment"
+    );
 
-    const senderPage = senderSession.page;
-    await senderPage.goto("/");
-    const senderPersonalTab = senderPage.locator('[data-test*="personal-tab"]');
-    await senderPersonalTab.click();
-    const senderItem = senderPage
-      .locator('[data-test*="transaction-item"]')
-      .first();
-    await senderItem.click();
+    await page.goto("/");
+    await page.locator('[data-test*="personal-tab"]').click();
+    await page.locator('[data-test*="transaction-item"]').first().click();
 
-    const senderDetail = new TransactionDetailPage(senderPage);
-    await senderDetail.postComment("Thank you!");
+    await transactionDetailPage.postComment("Thank you!");
 
-    const notifications = new NotificationsPage(receiverSession.page);
-    const receiverNav = new NavigationMenu(receiverSession.page);
     await receiverNav.goToNotifications();
 
-    const firstItem = notifications.listItems.first();
-    await expect(firstItem).toContainText(senderSession.user.firstName);
+    const firstItem = receiverNotifications.listItems.first();
+    await expect(firstItem).toContainText(loggedInUser.firstName);
     await expect(firstItem).toContainText("commented");
   });
 
-  test("receiver is notified of a payment", async () => {
-    const nav = new NavigationMenu(senderSession.page);
-    const newTransaction = new NewTransactionPage(senderSession.page);
-
-    await nav.newTransactionButton.click();
-    await newTransaction.createTransaction(
+  test("receiver is notified of a payment", async ({
+    navigationMenu,
+    newTransactionPage,
+  }) => {
+    await navigationMenu.newTransactionButton.click();
+    await newTransactionPage.createTransaction(
       receiverSession.user.firstName,
       "30",
       "Pizza",
       "payment"
     );
 
-    const notifications = new NotificationsPage(receiverSession.page);
-    const receiverNav = new NavigationMenu(receiverSession.page);
     await receiverNav.goToNotifications();
 
-    const firstItem = notifications.listItems.first();
-    await expect(firstItem).toContainText("received payment");
+    await expect(receiverNotifications.listItems.first()).toContainText(
+      "received payment"
+    );
   });
 
-  test("receiver is notified of a payment request", async () => {
-    const nav = new NavigationMenu(senderSession.page);
-    const newTransaction = new NewTransactionPage(senderSession.page);
-
-    await nav.newTransactionButton.click();
-    await newTransaction.createTransaction(
+  test("receiver is notified of a payment request", async ({
+    navigationMenu,
+    newTransactionPage,
+  }) => {
+    await navigationMenu.newTransactionButton.click();
+    await newTransactionPage.createTransaction(
       receiverSession.user.firstName,
       "300",
       "Airfare",
       "request"
     );
 
-    const notifications = new NotificationsPage(receiverSession.page);
-    const receiverNav = new NavigationMenu(receiverSession.page);
     await receiverNav.goToNotifications();
 
-    const firstItem = notifications.listItems.first();
-    await expect(firstItem).toContainText("requested payment");
+    await expect(receiverNotifications.listItems.first()).toContainText(
+      "requested payment"
+    );
   });
 
   test("renders an empty notifications state for a brand-new user", async () => {
     // A freshly-created user has no notifications yet, giving us the
     // empty state directly without needing to intercept the response.
-    const notifications = new NotificationsPage(receiverSession.page);
-    const receiverNav = new NavigationMenu(receiverSession.page);
     await receiverNav.openSidenavIfMobile();
     await receiverSession.page.getByTestId("sidenav-notifications").click();
 
     await expect(receiverSession.page).toHaveURL(/\/notifications$/);
-    await notifications.expectEmpty();
+    await receiverNotifications.expectEmpty();
   });
 });

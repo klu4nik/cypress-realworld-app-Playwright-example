@@ -1,31 +1,27 @@
 import { Browser, BrowserContext, Page } from "@playwright/test";
 import { createTestUser, TestUser } from "./test-user";
 import { SignInPage } from "../pages/SignInPage";
+import { createPageObjects, PageFixture } from "./page";
 import { dismissOnboardingIfPresent } from "./onboarding";
 
 export interface UserSession {
   context: BrowserContext;
   page: Page;
   user: TestUser;
+  /** Page objects bound to this session's own page. The page-object
+   *  fixtures always bind to the default `page`, so they can't reach a
+   *  session that opened its own browser context — use these instead. */
+  pages: PageFixture;
 }
 
 /**
- * Creates a brand-new browser context, signs up a fresh user through the
- * live app's POST /users endpoint, and logs them in through the real UI.
+ * Creates a brand-new browser context, signs up a fresh user, and logs them
+ * in through the real UI. One context per simulated user, since a session
+ * cookie is scoped to a single context — the stand-in for Cypress's
+ * `cy.switchUserByXstate()`, which has no Playwright equivalent.
  *
- * RWA's Cypress suite uses `cy.switchUserByXstate(username)` to instantly
- * swap the "active" user within a single test without a full logout —
- * a backdoor wired into the app's XState machine for Cypress's benefit
- * only. Playwright has no equivalent hook into that state machine, and
- * a session cookie is tied to one browser context, so the faithful
- * translation is: a separate browser context per simulated user, each
- * with its own real login. This is also just standard Playwright practice
- * for multi-user scenarios.
- *
- * This is the raw building block — specs should normally consume it via
- * the `userSession`/`createUserSession` fixtures in fixtures/index.ts,
- * which track and close every context automatically, rather than calling
- * this directly and having to remember cleanup.
+ * Prefer the `userSession`/`createUserSession` fixtures over calling this
+ * directly: they close every context they open.
  */
 export async function createUserSession(browser: Browser): Promise<UserSession> {
   const context = await browser.newContext();
@@ -36,5 +32,5 @@ export async function createUserSession(browser: Browser): Promise<UserSession> 
   await signIn.login(user.username, user.password);
   await dismissOnboardingIfPresent(page);
 
-  return { context, page, user };
+  return { context, page, user, pages: createPageObjects(page) };
 }

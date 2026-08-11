@@ -27,6 +27,25 @@ export type PageFixture = {
   userSettingsPage: UserSettingsPage;
 };
 
+/**
+ * Builds every page object against an arbitrary Page.
+ *
+ * The fixtures below only bind to the default `page`, so a second
+ * simultaneous login — which needs its own browser context — can't use
+ * them. That's what UserSession.pages is built from.
+ */
+export const createPageObjects = (page: Page): PageFixture => ({
+  homePage: new HomePage(page),
+  navigationMenu: new NavigationMenu(page),
+  onboardingDialog: new OnboardingDialog(page),
+  signInPage: new SignInPage(page),
+  signUpPage: new SignUpPage(page),
+  newTransactionPage: new NewTransactionPage(page),
+  transactionDetailPage: new TransactionDetailPage(page),
+  notificationsPage: new NotificationsPage(page),
+  userSettingsPage: new UserSettingsPage(page),
+});
+
 export const pageContextFixture: Fixtures<PageContextFixture & PlaywrightTestArgs> = {
   contextPage: async ({ page }, use) => {
     await use(page);
