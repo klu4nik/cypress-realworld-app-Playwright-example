@@ -1,5 +1,4 @@
 import { test, expect, createTestUser, dismissOnboardingIfPresent } from "../fixtures";
-import { SignInPage, SignUpPage, OnboardingDialog, NavigationMenu, HomePage } from "../pages";
 
 test.describe("User Sign-up and Login", () => {
   test.beforeEach(async ({ page }) => {
@@ -11,15 +10,24 @@ test.describe("User Sign-up and Login", () => {
     await expect(page).toHaveURL(/\/signin$/);
   });
 
-  test("should redirect to the home page after login", async ({ page, request }) => {
-    const signIn = new SignInPage(page);
+  test("should redirect to the home page after login", async ({
+    page,
+    request,
+    signInPage,
+  }) => {
     const user = await createTestUser(request);
 
-    await signIn.login(user.username, user.password, { rememberUser: true });
+    await signInPage.login(user.username, user.password, { rememberUser: true });
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("should remember a user for 30 days after login", async ({ page, context, request, signInPage, navigationMenu  }) => {
+  test("should remember a user for 30 days after login", async ({
+    page,
+    context,
+    request,
+    signInPage,
+    navigationMenu,
+  }) => {
     const user = await createTestUser(request);
 
     await signInPage.login(user.username, user.password, { rememberUser: true });
@@ -34,13 +42,14 @@ test.describe("User Sign-up and Login", () => {
     await expect(page).toHaveURL(/\/signin$/);
   });
 
-  test("should allow a visitor to sign-up, login, and logout", async ({ page }) => {
-    const signUp = new SignUpPage(page);
-    const signIn = new SignInPage(page);
-    const onboarding = new OnboardingDialog(page);
-    const nav = new NavigationMenu(page);
-    const home = new HomePage(page);
-
+  test("should allow a visitor to sign-up, login, and logout", async ({
+    page,
+    signUpPage,
+    signInPage,
+    onboardingDialog,
+    navigationMenu,
+    homePage,
+  }) => {
     // Unique per run: data/database.json is never reset between runs (see
     // fixtures/test-user.ts's module note), so a fixed username would
     // collide with a prior run's signup and fail validation on a repeat run.
@@ -55,39 +64,39 @@ test.describe("User Sign-up and Login", () => {
     // beforeEach already navigated to "/"; re-navigating here would race
     // the click below against the resulting re-render.
     await page.getByTestId("signup").click();
-    await expect(signUp.title).toBeVisible();
-    await expect(signUp.title).toContainText("Sign Up");
+    await expect(signUpPage.title).toBeVisible();
+    await expect(signUpPage.title).toContainText("Sign Up");
 
-    await signUp.fillForm(userInfo);
-    await signUp.submit();
+    await signUpPage.fillForm(userInfo);
+    await signUpPage.submit();
 
-    await signIn.login(userInfo.username, userInfo.password);
+    await signInPage.login(userInfo.username, userInfo.password);
 
     // Onboarding
-    await onboarding.expectVisible();
-    await expect(nav.notificationsCount).toBeVisible();
+    await onboardingDialog.expectVisible();
+    await expect(navigationMenu.notificationsCount).toBeVisible();
 
-    await onboarding.nextButton.click();
-    await onboarding.expectTitle("Create Bank Account");
+    await onboardingDialog.nextButton.click();
+    await onboardingDialog.expectTitle("Create Bank Account");
 
-    await onboarding.fillBankAccountForm({
+    await onboardingDialog.fillBankAccountForm({
       bankName: "The Best Bank",
       accountNumber: "123456789",
       routingNumber: "987654321",
     });
-    await onboarding.submitBankAccount();
+    await onboardingDialog.submitBankAccount();
 
-    await onboarding.expectTitle("Finished");
-    await onboarding.expectContent("You're all set!");
+    await onboardingDialog.expectTitle("Finished");
+    await onboardingDialog.expectContent("You're all set!");
 
-    await onboarding.nextButton.click();
-    await expect(home.transactionList).toBeVisible();
+    await onboardingDialog.nextButton.click();
+    await expect(homePage.transactionList).toBeVisible();
 
-    await nav.signOut();
+    await navigationMenu.signOut();
     await expect(page).toHaveURL(/\/signin$/);
   });
 
-  test("should display login errors", async ({ page, signInPage }) => {
+  test("should display login errors", async ({ signInPage }) => {
     await signInPage.goto();
 
     await signInPage.usernameInput.fill("User");
@@ -102,7 +111,7 @@ test.describe("User Sign-up and Login", () => {
     await signInPage.expectSubmitDisabled();
   });
 
-  test("should display signup errors", async ({ page, signUpPage }) => {
+  test("should display signup errors", async ({ signUpPage }) => {
     await signUpPage.goto();
 
     await signUpPage.firstNameInput.fill("First");
@@ -132,12 +141,15 @@ test.describe("User Sign-up and Login", () => {
     await signUpPage.expectSubmitDisabled();
   });
 
-  test("should error for an invalid user", async ({ page, signInPage }) => {
+  test("should error for an invalid user", async ({ signInPage }) => {
     await signInPage.login("invalidUserName", "invalidPa$$word");
     await signInPage.expectInvalidCredentialsError();
   });
 
-  test("should error for an invalid password for existing user", async ({ page, request, signInPage }) => {
+  test("should error for an invalid password for existing user", async ({
+    request,
+    signInPage,
+  }) => {
     const user = await createTestUser(request);
     await signInPage.login(user.username, "INVALID");
     await signInPage.expectInvalidCredentialsError();
